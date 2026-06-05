@@ -12,5 +12,31 @@ services:
       - mysql_data:/var/lib/mysql
       - ./backend/migrations/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
+  backend:
+    build: ./backend
+    container_name: tradeiq-backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DB_HOST: mysql
+      FLASK_APP: run.py
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+
+  frontend:
+    build:
+      context: "./frontend/DRA App"
+      dockerfile: Dockerfile
+    container_name: tradeiq-frontend
+    restart: unless-stopped
+    environment:
+      EXPO_PUBLIC_API_URL: "http://localhost:5000"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - backend
+
 volumes:
   mysql_data:
