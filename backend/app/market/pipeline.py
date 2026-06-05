@@ -19,17 +19,26 @@ class YahooFinancePipeline:
     @staticmethod
     def get_stock_info(ticker: str) -> dict:
         """Return company metadata: name, sector, industry, beta, market cap."""
-        stock = yf.Ticker(ticker)
-        info  = stock.info
-
-        return {
-            "ticker":       ticker.upper(),
-            "company_name": info.get("longName"),
-            "sector":       info.get("sector"),
-            "industry":     info.get("industry"),
-            "beta":         info.get("beta"),
-            "market_cap":   info.get("marketCap"),
-        }
+        try:
+            stock = yf.Ticker(ticker)
+            info  = stock.info
+            return {
+                "ticker":       ticker.upper(),
+                "company_name": info.get("longName"),
+                "sector":       info.get("sector"),
+                "industry":     info.get("industry"),
+                "beta":         info.get("beta"),
+                "market_cap":   info.get("marketCap"),
+            }
+        except Exception:
+            return {
+                "ticker":       ticker.upper(),
+                "company_name": None,
+                "sector":       None,
+                "industry":     None,
+                "beta":         None,
+                "market_cap":   None,
+            }
 
     # ─────────────────────────────────────────
     # Price history
