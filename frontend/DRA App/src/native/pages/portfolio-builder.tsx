@@ -166,6 +166,7 @@ export function PortfolioBuilder({ userData }: { userData: UserData | null }) {
       return;
     }
     setDraftStatus("Submitting trades to server...");
+    let successCount = 0;
     try {
       for (const position of positions) {
         const rawPrice = parseFloat(position.buyPrice.replace(/[^0-9.]/g, ""));
@@ -182,10 +183,13 @@ export function PortfolioBuilder({ userData }: { userData: UserData | null }) {
           tag3: position.tag3 === "(optional)" ? undefined : position.tag3 || undefined,
           thesis: position.thesis || undefined,
         });
+        successCount++;
       }
-      setDraftStatus(`${positions.length} trade(s) submitted successfully.`);
+      setDraftStatus(`${successCount}/${positions.length} trade(s) submitted successfully.`);
     } catch (err) {
-      setDraftStatus(`Error: ${err instanceof Error ? err.message : "Submission failed"}`);
+      setDraftStatus(
+        `${successCount}/${positions.length} submitted. Error: ${err instanceof Error ? err.message : "Submission failed"}`
+      );
     }
   }
 
