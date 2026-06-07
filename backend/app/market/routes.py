@@ -1,7 +1,29 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
+import yfinance as yf
+import time as _time
 
 from app.market.pipeline import YahooFinancePipeline
+
+_indices_cache: dict = {"data": None, "expires": 0.0}
+_INDICES_TTL = 300  # 5 minutes
+
+INDICES = [
+    {"name": "S&P 500",       "ticker": "^GSPC"},
+    {"name": "NASDAQ",        "ticker": "^IXIC"},
+    {"name": "DOW",           "ticker": "^DJI"},
+    {"name": "AAPL",          "ticker": "AAPL"},
+    {"name": "MSFT",          "ticker": "MSFT"},
+    {"name": "NVDA",          "ticker": "NVDA"},
+    {"name": "AMZN",          "ticker": "AMZN"},
+    {"name": "TSLA",          "ticker": "TSLA"},
+    {"name": "USD/INR",       "ticker": "INR=X"},
+    {"name": "GOLD",          "ticker": "GC=F"},
+    {"name": "NIFTY 50",      "ticker": "^NSEI"},
+    {"name": "SENSEX",        "ticker": "^BSESN"},
+    {"name": "NIFTY IT",      "ticker": "^CNXIT"},
+    {"name": "NIFTY PHARMA",  "ticker": "^CNXPHARMA"},
+]
 
 market_bp = Blueprint("market", __name__, url_prefix="/market")
 pipeline  = YahooFinancePipeline()
@@ -110,28 +132,6 @@ def get_current_price(ticker):
 
 
 # ─────────────────────────────────────────
-# Index/ticker definitions
-# ─────────────────────────────────────────
-
-INDICES = [
-    {"name": "S&P 500",       "ticker": "^GSPC"},
-    {"name": "NASDAQ",        "ticker": "^IXIC"},
-    {"name": "DOW",           "ticker": "^DJI"},
-    {"name": "AAPL",          "ticker": "AAPL"},
-    {"name": "MSFT",          "ticker": "MSFT"},
-    {"name": "NVDA",          "ticker": "NVDA"},
-    {"name": "AMZN",          "ticker": "AMZN"},
-    {"name": "TSLA",          "ticker": "TSLA"},
-    {"name": "USD/INR",       "ticker": "INR=X"},
-    {"name": "GOLD",          "ticker": "GC=F"},
-    {"name": "NIFTY 50",      "ticker": "^NSEI"},
-    {"name": "SENSEX",        "ticker": "^BSESN"},
-    {"name": "NIFTY IT",      "ticker": "^CNXIT"},
-    {"name": "NIFTY PHARMA",  "ticker": "^CNXPHARMA"},
-]
-
-
-# ─────────────────────────────────────────
 # GET /market/indices
 # Returns: price + % change for all tracked indices/tickers
 # ─────────────────────────────────────────
@@ -139,7 +139,10 @@ INDICES = [
 @market_bp.get("/indices")
 @jwt_required()
 def get_indices():
-    import yfinance as yf
+    now = _time.time()
+    if _indices_cache["data"] is not None and now < _indices_cache["expires"]:
+        return jsonify({"indices": _indices_cache["data"]}), 200
+
     results = []
     for entry in INDICES:
         try:
@@ -148,6 +151,8 @@ def get_indices():
                 continue
             today_close = float(hist["Close"].iloc[-1])
             prev_close  = float(hist["Close"].iloc[-2])
+            if prev_close == 0.0:
+                continue
             change_pct  = (today_close - prev_close) / prev_close * 100
             price_str   = f"{today_close:,.0f}" if today_close >= 1000 else f"{today_close:,.2f}"
             change_str  = f"{'+' if change_pct >= 0 else ''}{change_pct:.2f}%"
@@ -160,6 +165,11 @@ def get_indices():
             })
         except Exception:
             continue
+
+    if results:
+        _indices_cache["data"] = results
+        _indices_cache["expires"] = now + _INDICES_TTL
+
     return jsonify({"indices": results}), 200
 
 
@@ -175,7 +185,6 @@ def search_stocks():
     if len(q) < 2:
         return jsonify({"results": []}), 200
     try:
-        import yfinance as yf
         search = yf.Search(q, max_results=10)
         quotes = search.quotes or []
         formatted = [
