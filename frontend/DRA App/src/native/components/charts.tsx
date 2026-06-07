@@ -30,6 +30,20 @@ export function LineChart({
   const min = Math.min(...allValues) * 0.99;
   const max = Math.max(...allValues) * 1.01;
 
+  if (min === max) {
+    return (
+      <Svg width="100%" height={190} viewBox={`0 0 ${width} ${height + 40}`}>
+        <Polyline
+          points={`0,${height / 2} ${width},${height / 2}`}
+          fill="none"
+          stroke={C.border}
+          strokeWidth={2}
+          strokeDasharray="6 6"
+        />
+      </Svg>
+    );
+  }
+
   const points = (data: number[]) =>
     data
       .map((value, index) => {

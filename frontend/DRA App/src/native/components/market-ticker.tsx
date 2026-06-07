@@ -18,7 +18,7 @@ export function MarketTicker() {
     if (indices.length === 0) return;
     const animation = Animated.loop(
       Animated.timing(translateX, {
-        toValue: -920,
+        toValue: -1400,
         duration: 22000,
         easing: Easing.linear,
         useNativeDriver: true,

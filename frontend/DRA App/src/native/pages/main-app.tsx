@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { clearActiveUser } from "../auth-store";
+import { clearMarketCache } from "../market-store";
 import { analytics } from "../api";
 import type { BackendWeeklyScore } from "../api";
 import { brandLogo, C, font } from "../constants";
@@ -36,6 +37,10 @@ export function MainApp({ userData, onLogout }: { userData: UserData | null; onL
   const studentId = userData?.studentId || "202600000000";
   const initials = useMemo(() => userName.split(" ").map((item) => item[0]).join("").slice(0, 2).toUpperCase(), [userName]);
   const bottomNavHeight = 92 + insets.bottom;
+
+  useEffect(() => {
+    if (!profileOpen) setPortfolioScore(null);
+  }, [profileOpen]);
 
   useEffect(() => {
     if (!profileOpen || portfolioScore !== null) return;
@@ -147,6 +152,7 @@ export function MainApp({ userData, onLogout }: { userData: UserData | null; onL
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
+                clearMarketCache();
                 clearActiveUser();
                 setProfileOpen(false);
                 onLogout();
