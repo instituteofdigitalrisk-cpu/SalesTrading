@@ -166,9 +166,8 @@ def get_indices():
         except Exception:
             continue
 
-    if results:
-        _indices_cache["data"] = results
-        _indices_cache["expires"] = now + _INDICES_TTL
+    _indices_cache["data"] = results
+    _indices_cache["expires"] = now + (_INDICES_TTL if results else 30)
 
     return jsonify({"indices": results}), 200
 
