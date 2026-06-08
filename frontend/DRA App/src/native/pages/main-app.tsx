@@ -1,8 +1,9 @@
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { BarChart3, Bell, BookOpen, BriefcaseBusiness, LayoutDashboard, LogOut, Trophy, UserRound } from "lucide-react-native";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import type { ScrollView as ScrollViewType } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { clearActiveUser } from "../auth-store";
 import { clearMarketCache } from "../market-store";
@@ -37,6 +38,7 @@ export function MainApp({ userData, onLogout }: { userData: UserData | null; onL
   const studentId = userData?.studentId || "202600000000";
   const initials = useMemo(() => userName.split(" ").map((item) => item[0]).join("").slice(0, 2).toUpperCase(), [userName]);
   const bottomNavHeight = 92 + insets.bottom;
+  const scrollRef = useRef<ScrollViewType>(null);
 
   useEffect(() => {
     if (!profileOpen) setPortfolioScore(null);
@@ -85,13 +87,14 @@ export function MainApp({ userData, onLogout }: { userData: UserData | null; onL
       </View>
 
       <ScrollView
+        ref={scrollRef}
         contentInsetAdjustmentBehavior="automatic"
         style={{ flex: 1 }}
         scrollIndicatorInsets={{ bottom: bottomNavHeight }}
         contentContainerStyle={{ padding: isWide ? 28 : 18, paddingBottom: bottomNavHeight + 56, maxWidth: 980, width: "100%", alignSelf: "center" }}
       >
         {activeTab === "dashboard" ? <Dashboard userName={userName} studentId={studentId} /> : null}
-        {activeTab === "portfolio" ? <PortfolioBuilder userData={userData} /> : null}
+        {activeTab === "portfolio" ? <PortfolioBuilder userData={userData} onSubmitSuccess={() => setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 150)} /> : null}
         {activeTab === "scores" ? <Scores studentId={studentId} /> : null}
         {activeTab === "leaderboard" ? <Leaderboard /> : null}
         {activeTab === "courses" ? <Courses /> : null}

@@ -33,8 +33,8 @@ def _update_holding(user_id: str, trade: TradeLog):
 
     if trade.trade_type == "BUY":
         if holding:
-            total_qty   = holding.quantity + trade.quantity
-            total_cost  = (holding.avg_buy_price * holding.quantity) + float(trade.amount_invested)
+            total_qty   = float(holding.quantity) + trade.quantity
+            total_cost  = (float(holding.avg_buy_price) * float(holding.quantity)) + float(trade.amount_invested)
             holding.avg_buy_price = round(total_cost / total_qty, 4)
             holding.quantity      = total_qty
         else:

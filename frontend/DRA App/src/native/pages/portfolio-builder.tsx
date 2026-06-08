@@ -182,7 +182,7 @@ function StockSearchField({
   );
 }
 
-export function PortfolioBuilder({ userData }: { userData: UserData | null }) {
+export function PortfolioBuilder({ userData, onSubmitSuccess }: { userData: UserData | null; onSubmitSuccess?: () => void }) {
   const studentId = userData?.studentId || "202600000000";
   const { width } = useWindowDimensions();
   const isNarrow = width < 430;
@@ -289,6 +289,8 @@ export function PortfolioBuilder({ userData }: { userData: UserData | null }) {
         successCount++;
       }
       setDraftStatus(`${successCount}/${positions.length} trade(s) submitted successfully.`);
+      setPositions([makeTrade(studentId, 0, capitalAmount)]);
+      onSubmitSuccess?.();
     } catch (err) {
       setDraftStatus(
         `${successCount}/${positions.length} submitted. Error: ${err instanceof Error ? err.message : "Submission failed"}`
